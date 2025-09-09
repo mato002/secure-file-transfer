@@ -2,12 +2,11 @@
 
 @section('content')
 <div class="container">
-    <!-- ✅ Updated title with Font Awesome -->
     <h2 class="text-2xl font-semibold text-gray-900 dark:text-white text-center mb-6">
         <i class="fas fa-chart-bar"></i> Storage Usage Report
     </h2>
 
-    <!-- ✅ Filtering Form -->
+    <!-- Filtering Form -->
     <form method="GET" action="{{ route('admin.reports.storage_usage.index') }}" class="filter-form mb-6">
         <label for="date_from">From:</label>
         <input type="date" id="date_from" name="date_from" value="{{ request('date_from') }}" required>
@@ -25,7 +24,6 @@
             @endforeach
         </select>
 
-        <!-- ✅ Updated Filter and Reset buttons -->
         <button type="submit" class="btn-filter">
             <i class="fas fa-filter"></i> Filter
         </button>
@@ -34,7 +32,7 @@
         </a>
     </form>
 
-    <!-- ✅ Storage Usage Table -->
+    <!-- Storage Usage Table -->
     <div class="table-container overflow-x-auto">
         <table class="table table-bordered w-full text-sm text-left text-gray-900 bg-white shadow rounded">
             <thead class="bg-blue-600 text-white">
@@ -53,23 +51,25 @@
                 </tr>
             </thead>
             <tbody>
-                @if($storageUsage->total_files > 0)
+                @if(isset($storageUsage['total_files']) && $storageUsage['total_files'] > 0)
                     @php
-                        $largestMB = $storageUsage->largest_file / (1024 * 1024);
-                        $averageKB = $storageUsage->average_size / 1024;
-                        $totalMB = $storageUsage->total_size / (1024 * 1024);
-                        $smallestKB = $storageUsage->smallest_file / 1024;
+                        $largestMB = $storageUsage['largest_file'] / (1024 * 1024);
+                        $averageKB = $storageUsage['average_size'] / 1024;
+                        $totalMB = $storageUsage['total_size'] / (1024 * 1024);
+                        $smallestKB = $storageUsage['smallest_file'] / 1024;
 
-                        $dateFrom = \Carbon\Carbon::parse(request('date_from'));
-                        $dateTo = \Carbon\Carbon::parse(request('date_to'));
-                        $days = $dateFrom->diffInDays($dateTo) ?: 1;
-                        $uploadFrequency = round($storageUsage->total_files / $days, 2);
+                        $dateFrom = request('date_from') ? \Carbon\Carbon::parse(request('date_from')) : \Carbon\Carbon::now()->subMonth();
+                        $dateTo = request('date_to') ? \Carbon\Carbon::parse(request('date_to')) : \Carbon\Carbon::now();
+                        $days = max(1, $dateFrom->diffInDays($dateTo));
+                        $uploadFrequency = round($storageUsage['total_files'] / $days, 2);
 
-                        $efficiency = $storageUsage->largest_file > 0 
-                            ? round(($storageUsage->average_size / $storageUsage->largest_file) * 100, 1) 
+                        $efficiency = $storageUsage['largest_file'] > 0 
+                            ? round(($storageUsage['average_size'] / $storageUsage['largest_file']) * 100, 1) 
                             : 0;
 
-                        $peakDate = $storageUsage->peak_upload_date ?? 'N/A';
+                        $peakDate = isset($storageUsage['peak_upload_date']) && $storageUsage['peak_upload_date'] 
+                            ? \Carbon\Carbon::parse($storageUsage['peak_upload_date'])->format('d M Y')
+                            : 'N/A';
 
                         // Decision and Action Logic
                         if ($largestMB > 100) {
@@ -84,12 +84,12 @@
                         }
                     @endphp
                     <tr class="bg-white border-b">
-                        <td class="px-4 py-2">{{ $storageUsage->total_files }}</td>
+                        <td class="px-4 py-2">{{ $storageUsage['total_files'] }}</td>
                         <td class="px-4 py-2">{{ number_format($totalMB, 2) }} MB</td>
                         <td class="px-4 py-2">{{ number_format($averageKB, 2) }} KB</td>
                         <td class="px-4 py-2">{{ number_format($largestMB, 2) }} MB</td>
                         <td class="px-4 py-2">{{ number_format($smallestKB, 2) }} KB</td>
-                        <td class="px-4 py-2">{{ $storageUsage->last_upload_date ? \Carbon\Carbon::parse($storageUsage->last_upload_date)->format('d M Y, H:i') : 'N/A' }}</td>
+                        <td class="px-4 py-2">{{ $storageUsage['last_upload_date'] ? \Carbon\Carbon::parse($storageUsage['last_upload_date'])->format('d M Y, H:i') : 'N/A' }}</td>
                         <td class="px-4 py-2">{{ $uploadFrequency }}</td>
                         <td class="px-4 py-2">{{ $peakDate }}</td>
                         <td class="px-4 py-2">{{ $efficiency }}%</td>
@@ -105,11 +105,13 @@
         </table>
     </div>
 
-    <!-- ✅ Export Buttons -->
+    <!-- Export Buttons -->
+    @if(isset($storageUsage['total_files']) && $storageUsage['total_files'] > 0)
     <div class="mt-4 flex gap-3">
         <a href="{{ route('admin.reports.storage_usage.export', request()->all()) }}" class="btn btn-success">
             <i class="fas fa-file-csv"></i> Export as CSV
         </a>
     </div>
+    @endif
 </div>
 @endsection

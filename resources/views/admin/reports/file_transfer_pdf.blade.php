@@ -85,7 +85,7 @@
             </tr>
         </thead>
         <tbody>
-            @foreach($users as $user)
+@foreach($uploads as $user)
                 @php
                     $uploads = optional($user->files)->count() ?? 0;
                     $downloads = optional($user->downloads)->count() ?? 0;
