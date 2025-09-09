@@ -31,7 +31,7 @@ use App\Http\Controllers\RegularUser\Auth\ResetPasswordController;
 */
 
 Route::get('/', function () {
-    return view('welcome');
+    return view('landingpage');
 });
 
 Route::get('/dashboard', function () {
