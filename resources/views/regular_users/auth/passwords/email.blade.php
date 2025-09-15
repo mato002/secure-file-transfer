@@ -65,7 +65,7 @@
             <div class="error">{{ $errors->first() }}</div>
         @endif
 
-        <form method="POST" action="{{ route('regular_user.password.email') }}">
+        <form method="POST" action="{{ route('regular_users.password.email') }}">
             @csrf
             <input type="email" name="email" placeholder="Enter your email" required>
             <button type="submit">Send Password Reset Link</button>
